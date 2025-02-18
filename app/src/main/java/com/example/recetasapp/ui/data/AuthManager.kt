@@ -13,11 +13,11 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
-// Encapsula todas las operaciones relacionadas con la autenticación del usuario utilizando Firebase
 class AuthManager(private val context: Context) {
     private val auth: FirebaseAuth by lazy { Firebase.auth }
 
@@ -29,7 +29,6 @@ class AuthManager(private val context: Context) {
             AuthRes.Error(e.message ?: "Error al registrar usuario")
         }
     }
-
 
     suspend fun signInWithEmailAndPassword(email: String, password: String): AuthRes<FirebaseUser> {
         return try {
@@ -66,21 +65,26 @@ class AuthManager(private val context: Context) {
         }
     }
 
-    fun handleSignInResult(task: Task<GoogleSignInAccount>): AuthRes<GoogleSignInAccount?> {
+
+    suspend fun handleSignInResult(task: Task<GoogleSignInAccount>): AuthRes<FirebaseUser?> {
         return try {
             val account = task.getResult(ApiException::class.java)
-            AuthRes.Success(account)
-        } catch (e: ApiException) {
-            AuthRes.Error(e.message ?: "Error al iniciar sesión con Google")
-        }
-    }
 
-    suspend fun googleSignInCredential(credential: AuthCredential): AuthRes<FirebaseUser?> {
-        return try {
+            // Verificamos si la cuenta es válida
+            if (account == null) {
+                return AuthRes.Error("Error al iniciar sesión con Google: Cuenta nula")
+            }
+
+            // Generamos las credenciales de Google con el token ID
+            val credential: AuthCredential = GoogleAuthProvider.getCredential(account.idToken, null)
+
+            //  autenticar al usuario en Firebase
             val firebaseUser = auth.signInWithCredential(credential).await()
             firebaseUser.user?.let {
                 AuthRes.Success(it)
-            } ?: throw Exception("User is null")
+            } ?: throw Exception("Usuario nulo")
+        } catch (e: ApiException) {
+            AuthRes.Error(e.message ?: "Error al iniciar sesión con Google: ApiException")
         } catch (e: Exception) {
             AuthRes.Error(e.message ?: "Error al iniciar sesión con Google")
         }
@@ -88,19 +92,20 @@ class AuthManager(private val context: Context) {
 
     private val googleSignInClient: GoogleSignInClient by lazy {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestIdToken(context.getString(R.string.default_web_client_id)) // Verifica que esté configurado correctamente
             .requestEmail()
             .build()
         GoogleSignIn.getClient(context, gso)
     }
 
+    // Inicia el proceso de inicio de sesión con Google
     fun signInWithGoogle(googleSignInLauncher: ActivityResultLauncher<Intent>) {
         val signInIntent = googleSignInClient.signInIntent
         googleSignInLauncher.launch(signInIntent)
     }
 }
 
-// 🔹 Definición de `AuthRes` sin modificar el código existente
+//  Definición de AuthRes sin modificar el código existente
 sealed class AuthRes<out T> {
     data class Success<T>(val data: T) : AuthRes<T>()
     data class Error(val errorMessage: String) : AuthRes<Nothing>()

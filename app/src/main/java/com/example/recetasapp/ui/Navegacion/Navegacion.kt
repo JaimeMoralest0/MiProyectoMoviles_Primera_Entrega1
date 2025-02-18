@@ -21,7 +21,7 @@ fun SetupNavGraph(auth: AuthManager) {
                 navigateToHome = { navController.navigate(ScreenRecipe::class.simpleName!!) },
                 navigateToRegister = { navController.navigate(Register::class.simpleName!!) },
                 navigateToDatabase = { navController.navigate("databaseScreen") } // ✅ Ahora usa un string válido
-                // ✅ Se añade esta línea
+                //  Se añade esta línea
             )
         }
         composable(ScreenRecipe::class.simpleName!!) {
@@ -31,7 +31,7 @@ fun SetupNavGraph(auth: AuthManager) {
             RegisterScreen(auth, navController)
         }
         composable("databaseScreen") {
-            DatabaseScreen(navController) // ✅ Se usa directamente, sin `simpleName!!`
+            DatabaseScreen(navController) //  Se usa directamente, sin `simpleName!!`
         }
 
     }

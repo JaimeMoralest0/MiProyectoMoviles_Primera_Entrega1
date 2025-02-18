@@ -27,36 +27,29 @@ fun LoginScreen(
     auth: AuthManager,
     navigateToHome: () -> Unit,
     navigateToRegister: () -> Unit,
-    navigateToDatabase: () -> Unit // ✅ Se ha añadido correctamente
+    navigateToDatabase: () -> Unit // Se ha añadido correctamente
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }  // Estado para controlar la animación de carga
+    val scope = rememberCoroutineScope() // Creamos un scope para la corutina
     val context = LocalContext.current
 
     // Maneja el resultado del intento de inicio de sesión de Google
     val googleSignLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        when (val account =
-            auth.handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(result.data))) {
-            is AuthRes.Success -> {
-                val credential = GoogleAuthProvider.getCredential(account.data?.idToken, null)
-                scope.launch {
-                    val firebaseUser = auth.googleSignInCredential(credential)
-                    when (firebaseUser) {
-                        is AuthRes.Success -> {
-                            Toast.makeText(context, "Inicio de sesión correcto", Toast.LENGTH_SHORT).show()
-                            navigateToHome()
-                        }
-                        is AuthRes.Error -> {
-                            Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+        // Llamamos a handleSignInResult dentro de una corutina
+        scope.launch {
+            val account = auth.handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(result.data))
+            when (account) {
+                is AuthRes.Success -> {
+                    Toast.makeText(context, "Inicio de sesión correcto", Toast.LENGTH_SHORT).show()
+                    navigateToHome()
                 }
-            }
-            is AuthRes.Error -> {
-                Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_SHORT).show()
+                is AuthRes.Error -> {
+                    Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -91,10 +84,14 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // Botón de "Iniciar sesión"
         Button(
             onClick = {
                 scope.launch {
-                    signIn(email, password, context, auth, navigateToHome)
+                    isLoading = true  // Mostrar el loader
+                    signIn(email, password, context, auth, navigateToHome) {
+                        isLoading = false // Ocultar el loader después de completar
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -102,6 +99,7 @@ fun LoginScreen(
             Text("Iniciar sesión")
         }
 
+        // Botón de "Registrarse"
         Button(
             onClick = navigateToRegister,
             modifier = Modifier.fillMaxWidth(),
@@ -112,6 +110,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp)) // ✅ Espaciado adecuado
 
+        // Botón de "Continuar con Google"
         SocialMediaButton(
             onClick = {
                 auth.signInWithGoogle(googleSignLauncher)
@@ -122,13 +121,19 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
+        // Botón para la base de datos
         Button(
             onClick = { navigateToDatabase() },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
         ) {
             Text("Base de Datos", color = Color.White)
+        }
+
+        // Si el estado es "isLoading", muestra el indicador de carga
+        if (isLoading) {
+            Spacer(modifier = Modifier.height(32.dp))
+            CircularProgressIndicator() // Loader
         }
     }
 }
@@ -139,7 +144,8 @@ suspend fun signIn(
     password: String,
     context: Context,
     auth: AuthManager,
-    navigateToHome: () -> Unit
+    navigateToHome: () -> Unit,
+    onComplete: () -> Unit
 ) {
     if (email.isNotEmpty() && password.isNotEmpty()) {
         val result =
@@ -158,6 +164,7 @@ suspend fun signIn(
     } else {
         Toast.makeText(context, "Email y password tienen que estar rellenos", Toast.LENGTH_SHORT).show()
     }
+    onComplete()  // Termina la animación de carga
 }
 
 @Composable
