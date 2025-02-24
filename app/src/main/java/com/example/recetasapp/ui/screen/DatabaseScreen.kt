@@ -57,10 +57,7 @@ fun DatabaseScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = {
-                showUpdateForm = true
-                loadRecipes(db) { recipes -> recipeList = recipes }
-            },
+            onClick = { showUpdateForm = true },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
         ) {
@@ -70,10 +67,7 @@ fun DatabaseScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = {
-                showDeleteList = true
-                loadRecipes(db) { recipes -> recipeList = recipes }
-            },
+            onClick = { showDeleteList = true },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
         ) {
@@ -109,27 +103,144 @@ fun DatabaseScreen(navController: NavController) {
 
     // LISTADO DE RECETAS PARA MODIFICAR
     if (showUpdateForm) {
-        RecipeList(
-            recipeList = recipeList,
-            onRecipeSelected = { id, title ->
-                selectedRecipeId = id
-                selectedRecipeTitle = title
-                selectedRecipeIngredients = "Ingredientes de $title" // Modificar los ingredientes
+        AlertDialog(
+            onDismissRequest = { 
+                // Limpiar el estado al cerrar
                 showUpdateForm = false
-                showAddForm = true
+                selectedRecipeId = null
+                selectedRecipeTitle = ""
+                selectedRecipeIngredients = ""
+            },
+            title = { Text("Modificar Receta") },
+            text = {
+                Column {
+                    // Lista de recetas para seleccionar
+                    LazyColumn {
+                        items(recipeList) { (id, title) ->
+                            Text(
+                                text = title,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedRecipeId = id
+                                        selectedRecipeTitle = title
+                                        // Cargar los ingredientes de la receta seleccionada
+                                        scope.launch {
+                                            loadRecipeIngredients(db, id) { ingredients ->
+                                                selectedRecipeIngredients = ingredients
+                                            }
+                                        }
+                                    }
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
+
+                    if (selectedRecipeId != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = selectedRecipeTitle,
+                            onValueChange = { selectedRecipeTitle = it },
+                            label = { Text("Título") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = selectedRecipeIngredients,
+                            onValueChange = { selectedRecipeIngredients = it },
+                            label = { Text("Ingredientes") }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (selectedRecipeId != null) {
+                            scope.launch {
+                                updateRecipe(
+                                    db,
+                                    selectedRecipeId!!,
+                                    selectedRecipeTitle,
+                                    selectedRecipeIngredients,
+                                    context
+                                ) {
+                                    showUpdateForm = false
+                                    selectedRecipeId = null
+                                    loadRecipes(db) { recipes -> recipeList = recipes }
+                                }
+                            }
+                        }
+                    },
+                    enabled = selectedRecipeId != null
+                ) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showUpdateForm = false
+                        selectedRecipeId = null
+                        selectedRecipeTitle = ""
+                        selectedRecipeIngredients = ""
+                    }
+                ) {
+                    Text("Cerrar")
+                }
             }
         )
     }
 
     // LISTADO DE RECETAS PARA ELIMINAR
     if (showDeleteList) {
-        RecipeList(
-            recipeList = recipeList,
-            onRecipeSelected = { id, _ ->
-                scope.launch {
-                    deleteRecipeFromDatabase(id, context, db)
-                    loadRecipes(db) { recipes -> recipeList = recipes }
-                    showDeleteList = false
+        AlertDialog(
+            onDismissRequest = { 
+                showDeleteList = false 
+                selectedRecipeId = null
+            },
+            title = { Text("Eliminar Receta") },
+            text = {
+                LazyColumn {
+                    items(recipeList) { (id, title) ->
+                        Text(
+                            text = title,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedRecipeId = id
+                                    selectedRecipeTitle = title
+                                }
+                                .padding(8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (selectedRecipeId != null) {
+                            scope.launch {
+                                deleteRecipe(db, selectedRecipeId!!, context) {
+                                    showDeleteList = false
+                                    selectedRecipeId = null
+                                    loadRecipes(db) { recipes -> recipeList = recipes }
+                                }
+                            }
+                        }
+                    },
+                    enabled = selectedRecipeId != null
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { 
+                        showDeleteList = false
+                        selectedRecipeId = null
+                    }
+                ) {
+                    Text("Cerrar")
                 }
             }
         )
@@ -311,5 +422,58 @@ fun loadRecipes(db: FirebaseFirestore, onComplete: (List<Pair<String, String>>) 
         .addOnSuccessListener { documents ->
             val recipes = documents.map { it.id to it.getString("title").orEmpty() }
             onComplete(recipes)
+        }
+}
+
+// Cargar ingredientes de una receta desde Firestore
+suspend fun loadRecipeIngredients(db: FirebaseFirestore, recipeId: String, onComplete: (String) -> Unit) {
+    db.collection("recipes").document(recipeId)
+        .get()
+        .addOnSuccessListener { document ->
+            val ingredients = document.get("ingredients") as? List<String> ?: emptyList()
+            onComplete(ingredients.joinToString(", "))
+        }
+}
+
+// Actualizar receta en Firestore
+suspend fun updateRecipe(
+    db: FirebaseFirestore,
+    recipeId: String,
+    title: String,
+    ingredients: String,
+    context: android.content.Context,
+    onComplete: () -> Unit
+) {
+    val updatedRecipe = mapOf(
+        "title" to title,
+        "ingredients" to ingredients.split(",").map { it.trim() }
+    )
+
+    db.collection("recipes").document(recipeId)
+        .update(updatedRecipe)
+        .addOnSuccessListener {
+            Toast.makeText(context, "Receta actualizada correctamente", Toast.LENGTH_SHORT).show()
+            onComplete()
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Error al actualizar receta", Toast.LENGTH_SHORT).show()
+        }
+}
+
+// Eliminar receta de Firestore
+suspend fun deleteRecipe(
+    db: FirebaseFirestore,
+    recipeId: String,
+    context: android.content.Context,
+    onComplete: () -> Unit
+) {
+    db.collection("recipes").document(recipeId)
+        .delete()
+        .addOnSuccessListener {
+            Toast.makeText(context, "Receta eliminada correctamente", Toast.LENGTH_SHORT).show()
+            onComplete()
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Error al eliminar receta", Toast.LENGTH_SHORT).show()
         }
 }

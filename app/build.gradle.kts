@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
 }
 
@@ -42,11 +41,11 @@ android {
 }
 
 dependencies {
-
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
+
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
@@ -84,7 +83,6 @@ dependencies {
     implementation (libs.retrofit.v290)
     implementation (libs.converter.gson.v290)
     implementation (libs.androidx.activity.compose.v160)
-    implementation(libs.serialization)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
     implementation(libs.play.services)
@@ -92,4 +90,7 @@ dependencies {
     implementation (libs.google.firebase.auth.ktx)
     implementation (libs.firebase.firestore) // Esta es la versión actual, si no la tienes, añádela
     implementation (libs.firebase.analytics )
+    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 }

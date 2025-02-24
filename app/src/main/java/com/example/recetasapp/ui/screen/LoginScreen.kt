@@ -1,5 +1,6 @@
 package com.example.recetasapp.ui.screen
 
+import android.app.Activity
 import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -39,17 +40,32 @@ fun LoginScreen(
     val googleSignLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        // Llamamos a handleSignInResult dentro de una corutina
-        scope.launch {
-            val account = auth.handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(result.data))
-            when (account) {
-                is AuthRes.Success -> {
-                    Toast.makeText(context, "Inicio de sesión correcto", Toast.LENGTH_SHORT).show()
-                    navigateToHome()
+        println("Resultado de Google Sign In: ${result.resultCode}")
+        when (result.resultCode) {
+            Activity.RESULT_OK -> {
+                scope.launch {
+                    println("Iniciando proceso de autenticación con Google")
+                    val account = auth.handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(result.data))
+                    when (account) {
+                        is AuthRes.Success -> {
+                            println("Autenticación exitosa: ${account.data?.email}")
+                            Toast.makeText(context, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show()
+                            navigateToHome()
+                        }
+                        is AuthRes.Error -> {
+                            println("Error en la autenticación: ${account.errorMessage}")
+                            Toast.makeText(context, "Error: ${account.errorMessage}", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
-                is AuthRes.Error -> {
-                    Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_SHORT).show()
-                }
+            }
+            Activity.RESULT_CANCELED -> {
+                println("El usuario canceló el inicio de sesión")
+                Toast.makeText(context, "Inicio de sesión cancelado por el usuario", Toast.LENGTH_SHORT).show()
+            }
+            else -> {
+                println("Resultado inesperado: ${result.resultCode}")
+                Toast.makeText(context, "Error inesperado en el inicio de sesión", Toast.LENGTH_SHORT).show()
             }
         }
     }
