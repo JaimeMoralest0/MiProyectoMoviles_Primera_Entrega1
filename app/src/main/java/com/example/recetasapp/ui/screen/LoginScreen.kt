@@ -27,11 +27,12 @@ import kotlinx.coroutines.withContext
 fun LoginScreen(
     auth: AuthManager,
     navigateToHome: () -> Unit,
-    navigateToRegister: () -> Unit,
-    navigateToDatabase: () -> Unit // Se ha añadido correctamente
+    navigateToRegister: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }  // Estado para controlar la animación de carga
     val scope = rememberCoroutineScope() // Creamos un scope para la corutina
     val context = LocalContext.current
@@ -118,10 +119,9 @@ fun LoginScreen(
         // Botón de "Registrarse"
         Button(
             onClick = navigateToRegister,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Registrarse", color = Color.White)
+            Text("Registrarse")
         }
 
         Spacer(modifier = Modifier.height(16.dp)) // ✅ Espaciado adecuado
@@ -134,17 +134,6 @@ fun LoginScreen(
             text = "Continuar con Google",
             color = Color(0xFF4B0082)
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botón para la base de datos
-        Button(
-            onClick = { navigateToDatabase() },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-        ) {
-            Text("Base de Datos", color = Color.White)
-        }
 
         // Si el estado es "isLoading", muestra el indicador de carga
         if (isLoading) {

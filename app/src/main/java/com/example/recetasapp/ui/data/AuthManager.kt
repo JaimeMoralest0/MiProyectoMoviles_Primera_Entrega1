@@ -20,7 +20,11 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
 class AuthManager(private val context: Context) {
-    private val auth: FirebaseAuth by lazy { Firebase.auth }
+    private val auth = FirebaseAuth.getInstance()
+
+    fun isUserLoggedIn(): Boolean {
+        return auth.currentUser != null
+    }
 
     suspend fun createUserWithEmailAndPassword(email: String, password: String): AuthRes<FirebaseUser> {
         return try {

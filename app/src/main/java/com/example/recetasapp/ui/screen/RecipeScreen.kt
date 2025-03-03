@@ -7,40 +7,71 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.recetasapp.RecipeViewModel
 import com.example.recetasapp.model.Meal
-import com.example.recetasapp.ui.Navegacion.Login
 import com.example.recetasapp.ui.component.MealItem
 import com.example.recetasapp.ui.data.AuthManager
 
 @Composable
 fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: RecipeViewModel = viewModel()) {
+    // Verificar autenticación
+    LaunchedEffect(Unit) {
+        if (!auth.isUserLoggedIn()) {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
-    var ingredient by remember { mutableStateOf("") }  // Estado del ingrediente
-    val meals by viewModel.meals.collectAsState()  // Obtener las comidas desde el ViewModel
+    val context = LocalContext.current
+    var ingredient by remember { mutableStateOf("") }
+    val meals by viewModel.meals.collectAsState()
 
     Column(modifier = Modifier.padding(16.dp)) {
-        Button(
-            onClick = {
-                auth.signOut() // Cierra sesión en Firebase
-                navController.navigate(Login::class.simpleName!!) {
-                    popUpTo(0) // Elimina el historial de navegación
-                }
-            },
+        // Fila de botones en la parte superior
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Cerrar Sesión", color = Color.White)
+            // Botón de Cerrar Sesión
+            Button(
+                onClick = {
+                    auth.signOut()
+                    navController.navigate("login") {
+                        popUpTo(0)
+                    }
+                },
+                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            ) {
+                Text("Cerrar Sesión", color = Color.White)
+            }
+
+            // Botón de Base de Datos (solo si está autenticado)
+            if (auth.isUserLoggedIn()) {
+                Button(
+                    onClick = {
+                        try {
+                            navController.navigate("database")
+                        } catch (e: Exception) {
+                            println("Error de navegación: ${e.message}")
+                        }
+                    },
+                    modifier = Modifier.weight(1f).padding(start = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEB3B))
+                ) {
+                    Text("Base de Datos", color = Color.Black)
+                }
+            }
         }
 
-
-
-        // Campo de texto para buscar ingredientes
+        Spacer(modifier = Modifier.height(16.dp))
+        // Campo de búsqueda por ingrediente
         OutlinedTextField(
             value = ingredient,
             onValueChange = { ingredient = it },
@@ -50,11 +81,9 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botón para buscar recetas
         Button(
             onClick = {
                 if (ingredient.isNotEmpty()) {
-                    // Llamo a la función en el ViewModel para obtener las recetas
                     viewModel.getMealsByIngredient(ingredient)
                 }
             },
@@ -64,20 +93,18 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        // LazyColumn para mostrar las recetas
+// Lista de recetas obtenidas
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(meals) { meal: Meal ->
-                MealItem(meal)  // Llamo a MealItem para cada receta
+            items(meals) { meal ->
+                MealItem(
+                    meal = meal,
+                    context = context,
+                    onClick = {
+                        println("Navegando a detalle de: ${meal.idMeal}")
+                        navController.navigate("detail/${meal.idMeal}")
+                    }
+                )
             }
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    val fakeAuthManager = AuthManager(context = androidx.compose.ui.platform.LocalContext.current)
-    RecipeScreen(navController = rememberNavController(), auth = fakeAuthManager)
 }

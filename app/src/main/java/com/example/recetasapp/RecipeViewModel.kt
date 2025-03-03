@@ -9,20 +9,37 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class RecipeViewModel : ViewModel() {
+    // Estado para almacenar la lista de comidas obtenidas
+    private val _meals = MutableStateFlow<List<Meal>>(emptyList())
+    val meals: StateFlow<List<Meal>> = _meals
 
-    private val _meals = MutableStateFlow<List<Meal>>(emptyList())  // Estado para las recetas
-    val meals: StateFlow<List<Meal>> = _meals  // Exponemos el flujo como StateFlow
+    // Estado para almacenar la comida seleccionada
+    private val _selectedMeal = MutableStateFlow<Meal?>(null)
+    val selectedMeal: StateFlow<Meal?> = _selectedMeal
 
-    private val mealService = MealService.create()  // Crear la instancia de MealService
+    // Servicio para hacer llamadas a la API
+    private val mealService = MealService.create()
 
-    // Llamada a la API para obtener las recetas con el ingrediente
+    // Obtiene la lista de comidas por un ingrediente específico
     fun getMealsByIngredient(ingredient: String) {
         viewModelScope.launch {
             try {
                 val fetchedMeals = mealService.getMealsByIngredient(ingredient)
-                _meals.value = fetchedMeals.meals ?: emptyList()  // Actualizar el flujo con las recetas obtenidas
+                _meals.value = fetchedMeals.meals ?: emptyList() // Si la respuesta es nula, devuelve una lista vacía
             } catch (e: Exception) {
-                _meals.value = emptyList()  // Si hay error, devolver una lista vacía
+                _meals.value = emptyList() // Si hay un error, deja la lista vacía
+            }
+        }
+    }
+
+    // Obtiene una comida específica por su ID
+    fun getMealById(id: String) {
+        viewModelScope.launch {
+            try {
+                val response = mealService.getMealById(id)
+                _selectedMeal.value = response.meals?.firstOrNull() // Obtiene la primera comida si existe
+            } catch (e: Exception) {
+                _selectedMeal.value = null // Si hay un error, deja el valor en null
             }
         }
     }
