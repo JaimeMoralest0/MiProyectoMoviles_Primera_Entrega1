@@ -20,13 +20,13 @@ import androidx.compose.material.icons.filled.Share
 fun MealItem(
     meal: Meal,
     context: Context,
-    onClick: () -> Unit // ✅ Se agrega para manejar la navegación al detalle
+    onClick: () -> Unit // Se agrega para manejar la navegación al detalle
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable { onClick() }, // ✅ Ahora responde a clics
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
