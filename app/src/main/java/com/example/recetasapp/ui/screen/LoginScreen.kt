@@ -5,6 +5,8 @@ import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,8 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.recetasapp.R
 import com.example.recetasapp.ui.data.AuthManager
 import com.example.recetasapp.ui.data.AuthRes
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -31,13 +35,10 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var showError by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }  // Estado para controlar la animación de carga
     val scope = rememberCoroutineScope() // Creamos un scope para la corutina
     val context = LocalContext.current
 
-    // Maneja el resultado del intento de inicio de sesión de Google
     val googleSignLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -74,10 +75,20 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFADD8E6)) // Fondo azul claro
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Imagen encima del título "Iniciar sesión"
+        Image(
+            painter = painterResource(id = R.drawable.copas), // Asegúrate de que el nombre del archivo sea correcto
+            contentDescription = "Logo de la aplicación",
+            modifier = Modifier
+                .size(120.dp)
+                .padding(bottom = 32.dp) // Ajusta la distancia de la imagen del texto
+        )
+
         Text("Iniciar sesión", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -124,7 +135,7 @@ fun LoginScreen(
             Text("Registrarse")
         }
 
-        Spacer(modifier = Modifier.height(16.dp)) // ✅ Espaciado adecuado
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Botón de "Continuar con Google"
         SocialMediaButton(
@@ -196,3 +207,4 @@ fun SocialMediaButton(onClick: () -> Unit, text: String, color: Color) {
         }
     }
 }
+

@@ -3,14 +3,20 @@ package com.example.recetasapp.ui.screen
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.recetasapp.R
 import com.example.recetasapp.ui.data.AuthManager
 import com.example.recetasapp.ui.data.AuthRes
 import kotlinx.coroutines.launch
@@ -22,8 +28,26 @@ fun RegisterScreen(auth: AuthManager, navController: NavController) {
     val scope = rememberCoroutineScope() // Manejo de corrutinas
     val context = LocalContext.current // Contexto de la app
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Registro", style = MaterialTheme.typography.headlineMedium)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFADD8E6)) // Fondo azul clarito
+            .padding(16.dp)
+    ) {
+        // Coloca el texto de "Registro" y la imagen de copas.png a la derecha
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Registro", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.width(8.dp)) // Espacio entre la imagen y el texto
+            // Imagen copas.png (ajustada en tamaño)
+            Image(
+                painter = painterResource(id = R.drawable.copas), // Asegúrate de que el archivo esté en drawable
+                contentDescription = "Logo",
+                modifier = Modifier.size(40.dp) // Ajusta el tamaño según tus necesidades
+            )
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 

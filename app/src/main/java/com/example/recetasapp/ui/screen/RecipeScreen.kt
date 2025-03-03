@@ -1,17 +1,21 @@
 package com.example.recetasapp.ui.screen
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.recetasapp.RecipeViewModel
 import com.example.recetasapp.model.Meal
 import com.example.recetasapp.ui.component.MealItem
@@ -32,7 +36,23 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
     var ingredient by remember { mutableStateOf("") }
     val meals by viewModel.meals.collectAsState()
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFD0F0C0)) // Fondo verde pastel
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Imagen CLICKEABLE que redirige a la pantalla de inicio (login)
+        Image(
+            painter = painterResource(id = com.example.recetasapp.R.drawable.meal),
+            contentDescription = "Icono de comida",
+            modifier = Modifier
+                .size(100.dp) // Tamaño ajustable
+                .clickable { navController.navigate("login") } // Volver al login al hacer clic
+                .padding(bottom = 16.dp)
+        )
+
         // Fila de botones en la parte superior
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -71,11 +91,13 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
         // Campo de búsqueda por ingrediente
         OutlinedTextField(
             value = ingredient,
             onValueChange = { ingredient = it },
             label = { Text("Buscar ingrediente") },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black), // Texto en color negro
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -93,7 +115,8 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-// Lista de recetas obtenidas
+
+        // Lista de recetas obtenidas
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(meals) { meal ->
                 MealItem(

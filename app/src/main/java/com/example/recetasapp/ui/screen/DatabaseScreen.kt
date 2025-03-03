@@ -1,11 +1,17 @@
 import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -28,13 +34,31 @@ fun DatabaseScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFE1BEE7)) // Morado clarito
             .padding(16.dp)
     ) {
-        Text(
-            text = "Gestión de Recetas",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Gestión de Recetas",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Image(
+                    painter = painterResource(id = com.example.recetasapp.R.drawable.puesto),
+                    contentDescription = "Icono de base de datos",
+                    modifier = Modifier.size(50.dp) // Tamaño ajustable
+                        .clickable { navController.popBackStack()}
+                )
+            }
+        }
 
         Button(
             onClick = { showAddDialog = true },
