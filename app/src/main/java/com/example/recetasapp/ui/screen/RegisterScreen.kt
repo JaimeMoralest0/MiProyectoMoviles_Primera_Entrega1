@@ -13,19 +13,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.recetasapp.ui.data.AuthManager
 import com.example.recetasapp.ui.data.AuthRes
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun RegisterScreen(auth: AuthManager, navController: NavController) {
-    var email by remember { mutableStateOf("") } // Estado para el campo de email
-    var password by remember { mutableStateOf("") } // Estado para el campo de contraseña
-    val scope = rememberCoroutineScope() // Alcance para corrutinas
-    val context = LocalContext.current // Obtiene el contexto de la aplicación
+    var email by remember { mutableStateOf("") } // Estado del email
+    var password by remember { mutableStateOf("") } // Estado de la contraseña
+    val scope = rememberCoroutineScope() // Manejo de corrutinas
+    val context = LocalContext.current // Contexto de la app
 
     Column(modifier = Modifier.padding(16.dp)) {
-        // Título de la pantalla de registro
         Text("Registro", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -46,34 +43,34 @@ fun RegisterScreen(auth: AuthManager, navController: NavController) {
             onValueChange = { password = it },
             label = { Text("Contraseña") },
             modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation() // Oculta la contraseña al escribir
+            visualTransformation = PasswordVisualTransformation() // Oculta la contraseña
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Botón para registrar usuario en Firebase
+        // Botón de registro en Firebase
         Button(
             onClick = {
                 scope.launch {
-                    registerUser(email, password, context, auth, navController) // Llama a la función para registrar
+                    registerUser(email, password, context, auth, navController)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
         ) {
-            Text("Aceptar", color = Color.White) // Cambiado el color del texto a blanco para mayor legibilidad
+            Text("Registrarse", color = Color.White)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Botón para volver a la pantalla de inicio de sesión
-        TextButton(onClick = { navController.popBackStack() }) {
+        TextButton(onClick = { navController.navigate("login") }) {
             Text("Volver a inicio de sesión")
         }
     }
 }
 
-// Función para registrar usuario en Firebase
+// Función para registrar usuario en Firebase con mensajes de error detallados
 suspend fun registerUser(
     email: String,
     password: String,
@@ -81,21 +78,21 @@ suspend fun registerUser(
     auth: AuthManager,
     navController: NavController
 ) {
-    if (email.isNotEmpty() && password.isNotEmpty()) { // Verifica que los campos no estén vacíos
-        val result = withContext(Dispatchers.IO) {
-            auth.createUserWithEmailAndPassword(email, password) // Llama al metodo de autenticación
-        }
+    if (email.isNotEmpty() && password.isNotEmpty()) {
+        val result = auth.createUserWithEmailAndPassword(email, password)
 
         when (result) {
             is AuthRes.Success -> {
                 Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
-                navController.popBackStack()  // Regresa a la pantalla de inicio de sesión tras el registro
+                navController.navigate("login") {
+                    popUpTo("register") { inclusive = true } // Evita volver atrás
+                }
             }
             is AuthRes.Error -> {
-                Toast.makeText(context, result.errorMessage, Toast.LENGTH_SHORT).show() // Muestra el error en un Toast
+                Toast.makeText(context, "Error: ${result.errorMessage}", Toast.LENGTH_SHORT).show()
             }
         }
     } else {
-        Toast.makeText(context, "Email y contraseña deben estar completos", Toast.LENGTH_SHORT).show() // Notifica si los campos están vacíos
+        Toast.makeText(context, "Email y contraseña no pueden estar vacíos", Toast.LENGTH_SHORT).show()
     }
 }

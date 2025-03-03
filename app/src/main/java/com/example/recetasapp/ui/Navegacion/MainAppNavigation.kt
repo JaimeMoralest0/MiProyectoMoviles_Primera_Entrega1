@@ -29,7 +29,18 @@ fun MainAppNavigation(navController: NavHostController, auth: AuthManager) {
                         popUpTo("login") { inclusive = true } // Elimina la pantalla de login del historial
                     }
                 },
-                navigateToRegister = { /* Implementar si es necesario */ }
+                navigateToRegister = {
+                    // Navega a la pantalla de registro cuando el usuario presiona "Registrarse"
+                    navController.navigate("register")
+                }
+            )
+        }
+
+        // Pantalla de registro (Formulario de Firebase)
+        composable("register") {
+            RegisterScreen(
+                auth = auth,
+                navController = navController
             )
         }
 
