@@ -74,7 +74,7 @@ fun shareMeal(context: Context, meal: Meal) {
     val shareIntent = Intent().apply {
         action = Intent.ACTION_SEND
         type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, "¡Mira esta deliciosa receta: ${meal.strMeal}! 🥘")
+        putExtra(Intent.EXTRA_TEXT, "¡Mira esta deliciosa receta que puedes realizar en RecetApp: ${meal.strMeal}! 🥘")
     }
     context.startActivity(Intent.createChooser(shareIntent, "Compartir receta"))
 }
