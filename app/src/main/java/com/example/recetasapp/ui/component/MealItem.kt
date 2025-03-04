@@ -2,6 +2,7 @@ package com.example.recetasapp.ui.component
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,13 +16,17 @@ import coil.compose.rememberImagePainter
 import com.example.recetasapp.model.Meal
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.ui.graphics.Color
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun MealItem(
     meal: Meal,
     context: Context,
-    onClick: () -> Unit // Se agrega para manejar la navegación al detalle
+    onClick: () -> Unit
 ) {
+    val db = FirebaseFirestore.getInstance()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -29,15 +34,13 @@ fun MealItem(
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
@@ -52,23 +55,40 @@ fun MealItem(
                     text = meal.strMeal,
                     style = MaterialTheme.typography.bodyLarge
                 )
+
+                // Botón de Compartir
+                IconButton(
+                    onClick = {
+                        shareMeal(context, meal)
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Compartir receta",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
-            IconButton(
+            // Botón Naranja para añadir a favoritos
+            Button(
                 onClick = {
-                    shareMeal(context, meal)
-                }
+                    db.collection("favoritos").document(meal.idMeal).set(meal)
+                        .addOnSuccessListener {
+                            Toast.makeText(context, "Añadido correctamente a favoritos", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(context, "Error al añadir a favoritos", Toast.LENGTH_SHORT).show()
+                        }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)) // Naranja
             ) {
-                Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = "Compartir receta",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                Text(text = "Añadir a favoritos", color = Color.White)
             }
         }
     }
 }
-
 
 fun shareMeal(context: Context, meal: Meal) {
     val shareIntent = Intent().apply {

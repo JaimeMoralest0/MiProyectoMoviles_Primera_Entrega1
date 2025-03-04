@@ -1,5 +1,7 @@
 package com.example.recetasapp.ui.screen
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,10 +22,10 @@ import com.example.recetasapp.RecipeViewModel
 import com.example.recetasapp.model.Meal
 import com.example.recetasapp.ui.component.MealItem
 import com.example.recetasapp.ui.data.AuthManager
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: RecipeViewModel = viewModel()) {
-    // Verificar autenticación
     LaunchedEffect(Unit) {
         if (!auth.isUserLoggedIn()) {
             navController.navigate("login") {
@@ -39,26 +41,23 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFD0F0C0)) // Fondo verde pastel
+            .background(Color(0xFFD0F0C0))
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Imagen CLICKEABLE que redirige a la pantalla de inicio (login)
         Image(
             painter = painterResource(id = com.example.recetasapp.R.drawable.meal),
             contentDescription = "Icono de comida",
             modifier = Modifier
-                .size(100.dp) // Tamaño ajustable
-                .clickable { navController.navigate("login") } // Volver al login al hacer clic
+                .size(100.dp)
+                .clickable { navController.navigate("login") }
                 .padding(bottom = 16.dp)
         )
 
-        // Fila de botones en la parte superior
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Botón de Cerrar Sesión
             Button(
                 onClick = {
                     auth.signOut()
@@ -72,7 +71,6 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
                 Text("Cerrar Sesión", color = Color.White)
             }
 
-            // Botón de Base de Datos (solo si está autenticado)
             if (auth.isUserLoggedIn()) {
                 Button(
                     onClick = {
@@ -92,12 +90,24 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo de búsqueda por ingrediente
+
+        Button(
+            onClick = {
+                Log.d("RecipeScreen", "Navegando a FavoritosScreen")
+                navController.navigate("favoritos")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Ver Favoritos")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = ingredient,
             onValueChange = { ingredient = it },
             label = { Text("Buscar ingrediente") },
-            textStyle = LocalTextStyle.current.copy(color = Color.Black), // Texto en color negro
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -116,7 +126,6 @@ fun RecipeScreen(navController: NavController, auth: AuthManager, viewModel: Rec
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista de recetas obtenidas
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(meals) { meal ->
                 MealItem(

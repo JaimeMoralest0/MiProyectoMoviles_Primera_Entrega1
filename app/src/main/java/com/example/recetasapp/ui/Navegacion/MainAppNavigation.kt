@@ -24,24 +24,19 @@ fun MainAppNavigation(navController: NavHostController, auth: AuthManager) {
             LoginScreen(
                 auth = auth,
                 navigateToHome = {
-                    // Navega a la pantalla de recetas después de iniciar sesión
                     navController.navigate("recipe") {
-                        popUpTo("login") { inclusive = true } // Elimina la pantalla de login del historial
+                        popUpTo("login") { inclusive = true }
                     }
                 },
                 navigateToRegister = {
-                    // Navega a la pantalla de registro cuando el usuario presiona "Registrarse"
                     navController.navigate("register")
                 }
             )
         }
 
-        // Pantalla de registro (Formulario de Firebase)
+        // Pantalla de registro
         composable("register") {
-            RegisterScreen(
-                auth = auth,
-                navController = navController
-            )
+            RegisterScreen(auth = auth, navController = navController)
         }
 
         // Pantalla de recetas
@@ -49,15 +44,11 @@ fun MainAppNavigation(navController: NavHostController, auth: AuthManager) {
             RecipeScreen(navController = navController, auth = auth)
         }
 
-        // Pantalla de base de datos de recetas
+        // Pantalla de base de datos
         composable("database") {
             if (auth.isUserLoggedIn()) {
-                DatabaseScreen(
-                    navController = navController,
-                    viewModel = viewModel() // Se obtiene el ViewModel asociado
-                )
+                DatabaseScreen(navController = navController, viewModel = viewModel())
             } else {
-                // Si el usuario no está autenticado, lo redirige al login
                 LaunchedEffect(Unit) {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -66,17 +57,18 @@ fun MainAppNavigation(navController: NavHostController, auth: AuthManager) {
             }
         }
 
+        // Pantalla de favoritos
+        composable("favoritos") {
+            FavoritosScreen(navController = navController)
+        }
+
         // Pantalla de detalles de una receta
         composable(
             route = "detail/{mealId}",
             arguments = listOf(navArgument("mealId") { type = NavType.StringType })
         ) { backStackEntry ->
             val mealId = backStackEntry.arguments?.getString("mealId") ?: return@composable
-            DetailScreen(
-                navController = navController,
-                mealId = mealId,
-                viewModel = viewModel() // Se obtiene el ViewModel para la pantalla de detalles
-            )
+            DetailScreen(navController = navController, mealId = mealId, viewModel = viewModel())
         }
     }
 }

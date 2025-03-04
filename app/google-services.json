@@ -14,11 +14,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "780730526203-0ta3701lf8rmvbekiqioth90m35oemmp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.recetasapp",
+            "certificate_hash": "ac5c536b704752065de05f36d6fe326523405943"
+          }
+        },
+        {
           "client_id": "780730526203-j0g28adcnud85j3m3v3mt8ipfll1d9l2.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.recetasapp",
             "certificate_hash": "2a89ce5f022ee62f5eb7bf18cdf71544133d892f"
+          }
+        },
+        {
+          "client_id": "780730526203-s6tcb9jniqab2lvqr03via1lv9kbc6cn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.recetasapp",
+            "certificate_hash": "3f532d6fa9112b6dedbe68572d4f6a3e61c45a9e"
           }
         },
         {
